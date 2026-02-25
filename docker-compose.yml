@@ -1,0 +1,93 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak_secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    command: start-dev --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_secret
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 8080
+      KC_HEALTH_ENABLED: "true"
+      KC_SPI_THEME_STATIC_MAX_AGE: -1
+      KC_SPI_THEME_CACHE_THEMES: "false"
+      KC_SPI_THEME_CACHE_TEMPLATES: "false"
+    volumes:
+      - ./keycloak/themes/blog-theme:/opt/keycloak/themes/blog-theme
+      - ./keycloak/blog-realm.json:/opt/keycloak/data/import/blog-realm.json
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  auth-service:
+    build: ./services/auth-service
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: blog
+      KEYCLOAK_CLIENT_ID: auth-service
+      KEYCLOAK_CLIENT_SECRET: auth-service-secret
+      BLOG_SERVICE_URL: http://blog-service:8002
+      DATABASE_URL: postgresql://keycloak:keycloak_secret@postgres:5432/auth_db
+    ports:
+      - "8001:8001"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+  blog-service:
+    build: ./services/blog-service
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: blog
+      KEYCLOAK_CLIENT_ID: blog-service
+      KEYCLOAK_CLIENT_SECRET: blog-service-secret
+      DATABASE_URL: postgresql://keycloak:keycloak_secret@postgres:5432/blog_db
+    ports:
+      - "8002:8002"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - keycloak
+      - auth-service
+      - blog-service
+
+volumes:
+  postgres_data:
