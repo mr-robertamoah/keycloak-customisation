@@ -1,0 +1,15 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080     # Keycloak
+        hostPort: 8080
+      - containerPort: 30001     # Auth Service
+        hostPort: 8001
+      - containerPort: 30002     # Blog Service
+        hostPort: 8002
+      - containerPort: 30173     # Frontend
+        hostPort: 5173
+      - containerPort: 30003     # Frontend (nginx)
+        hostPort: 5173
