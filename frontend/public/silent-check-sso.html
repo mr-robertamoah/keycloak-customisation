@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+  // This page is loaded in a hidden iframe by the Keycloak adapter
+  // to silently detect if the user is already logged in.
+  parent.postMessage(location.href, location.origin)
+</script>
+</body>
+</html>
