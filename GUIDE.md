@@ -1181,7 +1181,83 @@ supportEmail=support@example.com
 6. Refresh the login page
 7. You should see your custom footer!
 
-### Exercise 5: Customize the Registration Page
+### Exercise 5: Add Navigation Between Frontend and Account
+
+**Goal:** Allow users to navigate between the blog frontend and Keycloak account console.
+
+#### Frontend → Account Link
+
+1. Open `frontend/src/App.vue`
+2. Find the nav-right section (around line 10)
+3. Add the Account link:
+```vue
+<a v-if="user" href="http://localhost:8080/realms/blog/account/" class="btn-link">Account</a>
+```
+
+4. Add CSS styling (around line 104):
+```css
+button, .btn-link {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-link {
+  background: #EF4444;
+  color: white;
+}
+
+.btn-link:hover {
+  background: #DC2626;
+}
+```
+
+5. Rebuild frontend: `docker compose up -d --build frontend`
+
+#### Account → Frontend Link
+
+1. Update `keycloak/themes/blog-theme/account/resources/js/title.js`:
+```javascript
+document.title = "The Blog - Account Management";
+
+function addBackLink() {
+  const headerTools = document.querySelector('.pf-c-page__header-tools');
+  if (headerTools && !document.querySelector('.back-to-blog-link')) {
+    const backLink = document.createElement('a');
+    backLink.href = 'http://localhost:5173';
+    backLink.textContent = '← Back to Blog';
+    backLink.className = 'back-to-blog-link';
+    backLink.style.cssText = `
+      display: inline-block;
+      margin-right: 1.5rem;
+      padding: 0.5rem 1rem;
+      background: #EF4444;
+      color: white !important;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    `;
+    headerTools.insertBefore(backLink, headerTools.firstChild);
+  }
+}
+
+setTimeout(addBackLink, 100);
+setTimeout(addBackLink, 500);
+setTimeout(addBackLink, 1000);
+```
+
+2. Hard refresh account page to test
+
+**Why this works:**
+- Frontend uses standard HTML link
+- Account console is React SPA, needs JavaScript to inject link after app loads
+- Multiple setTimeout calls ensure link appears even if React loads slowly
+
+### Exercise 6: Customize the Registration Page
 
 1. Open `keycloak/themes/blog-theme/login/templates/register.ftl`
 2. Find the title section:

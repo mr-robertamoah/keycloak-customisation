@@ -279,3 +279,59 @@ Now that you understand theme customization, you can:
 - Create completely custom themes without parent
 - Brand email templates with your company colors
 - Customize the admin console theme
+
+---
+
+## Navigation Between Frontend and Account
+
+### Frontend → Account Page
+Add a link in your frontend navigation:
+
+**App.vue:**
+```vue
+<a v-if="user" href="http://localhost:8080/realms/blog/account/" class="btn-link">Account</a>
+```
+
+**CSS:**
+```css
+.btn-link {
+  background: #EF4444;
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  text-decoration: none;
+}
+```
+
+### Account Page → Frontend
+Inject a clickable link via JavaScript (account/resources/js/title.js):
+
+```javascript
+function addBackLink() {
+  const headerTools = document.querySelector('.pf-c-page__header-tools');
+  if (headerTools && !document.querySelector('.back-to-blog-link')) {
+    const backLink = document.createElement('a');
+    backLink.href = 'http://localhost:5173';
+    backLink.textContent = '← Back to Blog';
+    backLink.className = 'back-to-blog-link';
+    backLink.style.cssText = `
+      display: inline-block;
+      margin-right: 1.5rem;
+      padding: 0.5rem 1rem;
+      background: #EF4444;
+      color: white !important;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    `;
+    headerTools.insertBefore(backLink, headerTools.firstChild);
+  }
+}
+
+// Retry as React app loads
+setTimeout(addBackLink, 100);
+setTimeout(addBackLink, 500);
+setTimeout(addBackLink, 1000);
+```
+
+**Why JavaScript?** The account console is a React SPA, so you can't use static HTML. JavaScript dynamically injects the link after the app loads.
