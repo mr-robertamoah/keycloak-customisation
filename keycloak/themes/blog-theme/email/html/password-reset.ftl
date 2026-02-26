@@ -21,7 +21,7 @@
 <div class="wrapper">
 
   <div class="header">
-    <h1>🔐 Password Reset</h1>
+    <h1>🚀 The Blog - Password Reset</h1>
   </div>
 
   <div class="body">

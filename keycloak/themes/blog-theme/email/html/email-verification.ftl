@@ -14,16 +14,16 @@
   <style>
     body { margin: 0; padding: 0; background-color: #F8FAFF; font-family: 'Helvetica Neue', Arial, sans-serif; }
     .email-wrapper { max-width: 600px; margin: 40px auto; }
-    .email-header  { background: #3B82F6; padding: 32px 40px; border-radius: 8px 8px 0 0; text-align: center; }
+    .email-header  { background: #EF4444; padding: 32px 40px; border-radius: 8px 8px 0 0; text-align: center; }
     .email-header h1 { color: #ffffff; font-size: 24px; margin: 0; }
     .email-body    { background: #FFFFFF; padding: 40px; border: 1px solid #E2E8F0; }
-    .email-footer  { background: #F1F5F9; padding: 24px 40px; border-radius: 0 0 8px 8px; text-align: center;
+    .email-footer  { background: #FEE2E2; padding: 24px 40px; border-radius: 0 0 8px 8px; text-align: center;
                      font-size: 13px; color: #64748B; border: 1px solid #E2E8F0; border-top: 0; }
-    .btn           { display: inline-block; padding: 14px 32px; background: #3B82F6; color: #FFFFFF !important;
+    .btn           { display: inline-block; padding: 14px 32px; background: #EF4444; color: #FFFFFF !important;
                      text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;
                      margin: 24px 0; }
     p              { color: #1E293B; line-height: 1.7; font-size: 15px; }
-    .expiry-note   { background: #FFF7ED; border: 1px solid #FED7AA; border-radius: 6px;
+    .expiry-note   { background: #FEE2E2; border: 1px solid #FED7AA; border-radius: 6px;
                      padding: 12px 16px; color: #9A3412; font-size: 13px; margin-top: 16px; }
   </style>
 </head>
@@ -31,7 +31,7 @@
   <div class="email-wrapper">
 
     <div class="email-header">
-      <h1>The Blog ✍️</h1>
+      <h1>🚀 The Blog</h1>
     </div>
 
     <div class="email-body">
