@@ -28,11 +28,13 @@
 ### Login Theme Structure
 ```
 login/
-├── theme.properties              # parent=keycloak, styles=css/styles.css
+├── theme.properties              # parent=keycloak, styles=css/styles.css, scripts=js/register.js
 ├── messages/
 │   └── messages_en.properties   # loginTitle=Sign in to The Blog
 ├── resources/
 │   ├── css/styles.css           # CSS overrides with !important
+│   ├── js/
+│   │   └── register.js          # Auto-fill first/last name on registration
 │   └── img/
 │       ├── logo.svg             # Custom logo displayed in header
 │       └── favicon.ico          # Browser tab icon
@@ -98,6 +100,47 @@ a {
 body, .login-pf-page {
   background: #FEE2E2 !important;
 }
+```
+
+**5. Improve registration form:**
+```css
+/* Hide first/last name fields */
+#kc-register-form .form-group:has(input[name="firstName"]),
+#kc-register-form .form-group:has(input[name="lastName"]) {
+  display: none !important;
+}
+
+/* Add scrolling for long forms */
+#kc-container {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Keep required asterisk inline */
+.pf-c-form__label-required {
+  display: inline !important;
+  margin-left: 0.25rem;
+}
+```
+
+**JavaScript to auto-fill hidden fields (login/resources/js/register.js):**
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('kc-register-form');
+  if (form) {
+    form.addEventListener('submit', () => {
+      const firstName = document.getElementById('firstName');
+      const lastName = document.getElementById('lastName');
+      if (firstName && !firstName.value) firstName.value = 'User';
+      if (lastName && !lastName.value) lastName.value = 'User';
+    });
+  }
+});
+```
+
+**Update theme.properties:**
+```properties
+scripts=js/register.js
 ```
 
 ### Account Theme

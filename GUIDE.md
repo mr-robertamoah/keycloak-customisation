@@ -1257,7 +1257,55 @@ setTimeout(addBackLink, 1000);
 - Account console is React SPA, needs JavaScript to inject link after app loads
 - Multiple setTimeout calls ensure link appears even if React loads slowly
 
-### Exercise 6: Customize the Registration Page
+### Exercise 6: Simplify Registration Form
+
+**Goal:** Hide first and last name fields to make registration simpler.
+
+1. Add CSS to hide the fields (already in styles.css):
+```css
+#kc-register-form .form-group:has(input[name="firstName"]),
+#kc-register-form .form-group:has(input[name="lastName"]) {
+  display: none !important;
+}
+```
+
+2. Create `keycloak/themes/blog-theme/login/resources/js/register.js`:
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('kc-register-form');
+  if (form) {
+    form.addEventListener('submit', () => {
+      const firstName = document.getElementById('firstName');
+      const lastName = document.getElementById('lastName');
+      if (firstName && !firstName.value) firstName.value = 'User';
+      if (lastName && !lastName.value) lastName.value = 'User';
+    });
+  }
+});
+```
+
+3. Update `login/theme.properties`:
+```properties
+scripts=js/register.js
+```
+
+4. Add scrolling for long forms:
+```css
+#kc-container {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+```
+
+5. Test: Go to registration page, you should only see Email, Username, and Password fields
+
+**Why this works:**
+- CSS hides the fields from view
+- JavaScript auto-fills them with "User" on submit
+- Keycloak validation passes because fields have values
+- User doesn't need to fill unnecessary fields
+
+### Exercise 7: Customize the Registration Page Title
 
 1. Open `keycloak/themes/blog-theme/login/templates/register.ftl`
 2. Find the title section:
@@ -1277,8 +1325,8 @@ The theme uses CSS variables for easy customization:
 
 ```css
 :root {
-  --brand-primary: #3B82F6;        /* Main color */
-  --brand-primary-hover: #2563EB;  /* Hover state */
+  --brand-primary: #EF4444;        /* Main color (red) */
+  --brand-primary-hover: #DC2626;  /* Hover state */
   --brand-bg: #F8FAFF;             /* Background */
   --brand-card: #FFFFFF;           /* Card background */
   --brand-text: #1E293B;           /* Text color */
