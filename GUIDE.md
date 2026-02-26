@@ -823,34 +823,56 @@ Every template receives these variables from Keycloak:
 Let's look at `login.ftl`:
 
 ```freemarker
-<!DOCTYPE html>
-<html>
-<head>
-  <title>${msg("loginTitle", realm.displayName)}</title>
-  <link rel="stylesheet" href="${resourcesPath}/css/styles.css" />
-</head>
-<body>
-  <#-- Show error message if login failed -->
-  <#if message?has_content>
-    <div class="alert alert-${message.type}">
-      ${kcSanitize(message.summary)?no_esc}
-    </div>
+<#import "template.ftl" as layout>
+<@layout.registrationLayout displayMessage=!messagesPerField.existsError('username','password') displayInfo=realm.password && realm.registrationAllowed && !registrationDisabled??; section>
+
+  <#if section = "header">
+    <img class="brand-logo" src="${properties.logoUrl}" alt="${properties.brandName!realm.displayName}" />
+    <h1 class="brand-title">{properties.brandName!realm.displayName}</h1>
+  
+  <#elseif section = "form">
+    <form id="kc-form-login" action="${url.loginAction}" method="post">
+      <div class="form-group">
+        <label for="username">
+          <#if !realm.loginWithEmailAllowed>${msg("username")}
+          <#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}
+          <#else>${msg("email")}</#if>
+        </label>
+        <input type="text" id="username" name="username" class="form-control" value="${(login.username!'')?html}" autofocus autocomplete="username" />
+      </div>
+
+      <div class="form-group">
+        <label for="password">${msg("password")}</label>
+        <input type="password" id="password" name="password" class="form-control" autocomplete="current-password" />
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <#if realm.rememberMe && !usernameHidden??>
+          <label class="checkbox-row">
+            <input type="checkbox" name="rememberMe" <#if login.rememberMe??>checked</#if> />
+            ${msg("rememberMe")}
+          </label>
+        <#else>
+          <span></span>
+        </#if>
+        <#if realm.resetPasswordAllowed>
+          <a href="${url.loginResetCredentialsUrl}">${msg("doForgotPassword")}</a>
+        </#if>
+      </div>
+
+      <input type="hidden" name="credentialId" value="<#if auth.selectedCredential?has_content>${auth.selectedCredential}</#if>" />
+      <input class="btn-primary" type="submit" value="${msg("doLogIn")}" />
+    </form>
+
+  <#elseif section = "info">
+    <#if realm.password && realm.registrationAllowed && !registrationDisabled??>
+      <div class="kc-links">
+        ${msg("noAccount")} <a href="${url.registrationUrl}">${msg("doRegister")}</a>
+      </div>
+    </#if>
   </#if>
 
-  <#-- Login form -->
-  <form action="${url.loginAction}" method="post">
-    <input type="text" name="username" 
-           value="${(login.username!'')?html}" />
-    <input type="password" name="password" />
-    <button type="submit">${msg("doLogIn")}</button>
-  </form>
-
-  <#-- Registration link if enabled -->
-  <#if realm.registrationAllowed>
-    <a href="${url.registrationUrl}">${msg("doRegister")}</a>
-  </#if>
-</body>
-</html>
+</@layout.registrationLayout>
 ```
 
 **Key Points:**
@@ -877,45 +899,269 @@ KC_SPI_THEME_CACHE_TEMPLATES: "false"
 
 This means: **Edit files → Save → Refresh browser** (no restart needed!)
 
+### Important: Parent Theme Behavior
+
+When `theme.properties` has `parent=keycloak`:
+- Keycloak uses the parent's `template.ftl` wrapper (HTML structure)
+- Your custom templates (login.ftl, register.ftl) may not be used as expected
+- **Best approach:** Use CSS overrides to customize appearance
+- **Alternative:** Remove parent and create all templates from scratch
+
+### Critical: File References Must Exist
+
+In `theme.properties`, if you reference a file that doesn't exist:
+```properties
+styles=css/login.css css/styles.css  # If login.css is missing...
+```
+Keycloak will **silently fail** and fall back to the parent theme entirely.
+
+**Always verify:**
+```bash
+docker compose exec keycloak ls /opt/keycloak/themes/blog-theme/login/resources/css/
+```
+
 ### Exercise 1: Change the Primary Color
+
+**Goal:** Change buttons and links from blue to red across login and account pages.
+
+#### Step 1: Update Login Theme CSS
 
 1. Open `keycloak/themes/blog-theme/login/resources/css/styles.css`
 2. Find line 3:
 ```css
 --brand-primary: #3B82F6;  /* Blue */
+--brand-primary-hover: #2563EB;
 ```
-3. Change it to:
+3. Change to:
 ```css
 --brand-primary: #EF4444;  /* Red */
+--brand-primary-hover: #DC2626;
 ```
-4. Save the file
-5. Go to http://localhost:8080/realms/blog/account
-6. Refresh the page
-7. Buttons should now be red!
+4. Change the background (line 5):
+```css
+--brand-bg: #FEE2E2;  /* Light red */
+```
+5. Save the file
+
+#### Step 2: Update Account Theme CSS
+
+1. Open `keycloak/themes/blog-theme/account/resources/css/styles.css`
+2. Update the CSS variables and add overrides:
+```css
+:root {
+  --pf-v5-global--primary-color--100: #EF4444 !important;
+  --pf-v5-global--primary-color--200: #DC2626 !important;
+  --pf-v5-c-button--m-primary--BackgroundColor: #EF4444 !important;
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: #DC2626 !important;
+  --pf-v5-global--BackgroundColor--100: #FEE2E2 !important;
+}
+
+body, .pf-c-page, .pf-c-page__header, .pf-c-page__sidebar {
+  background: #FEE2E2 !important;
+}
+
+.pf-c-button.pf-m-primary {
+  background-color: #EF4444 !important;
+}
+```
+
+#### Step 3: Add Custom Branding
+
+**Login page:**
+1. Create `keycloak/themes/blog-theme/login/messages/messages_en.properties`:
+```properties
+loginTitle=Sign in to The Blog
+```
+
+2. Add logo and subtitle via CSS (already in styles.css):
+```css
+#kc-header::before {
+  content: "";
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  background-image: url('../img/logo.svg');
+}
+
+#kc-header::after {
+  content: "🚀 The Blog";
+  display: block;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.card-pf::before {
+  content: "Secure Authentication Made Easy";
+  display: block;
+  text-align: center;
+  color: #64748B;
+  font-size: 0.9rem;
+  padding-bottom: 1rem;
+}
+```
+
+**Account page:**
+1. Create `keycloak/themes/blog-theme/account/resources/js/title.js`:
+```javascript
+document.title = "The Blog - Account Management";
+```
+
+2. Update `account/theme.properties`:
+```properties
+parent=keycloak.v3
+styles=css/styles.css
+scripts=js/title.js
+```
+
+3. Copy favicon to resources root:
+```bash
+cp keycloak/themes/blog-theme/login/resources/img/favicon.ico keycloak/themes/blog-theme/account/resources/favicon.svg
+```
+
+#### Step 4: Test
+
+1. Go to http://localhost:5173 and click "Get Started"
+2. **Hard refresh** (Ctrl+Shift+R) - you should see:
+   - Tab title: "Sign in to The Blog"
+   - Red favicon with "B"
+   - Logo at top of login card
+   - "🚀 The Blog" title
+   - "Secure Authentication Made Easy" subtitle
+   - Red buttons and light red background
+3. After login, go to http://localhost:8080/realms/blog/account/
+4. **Hard refresh** - you should see:
+   - Tab title: "The Blog - Account Management"
+   - Red favicon
+   - Logo in header next to "The Blog"
+   - "Manage your account settings" subtitle
+   - Red Save button
+   - Light red background throughout
+2. **Hard refresh** (Ctrl+Shift+R) - you should see red buttons and light red background
+3. After login, go to http://localhost:8080/realms/blog/account/
+4. **Hard refresh** - Save button should be red with light red background
 
 **Why it works:**
-- The CSS file is mounted as a volume in docker-compose.yml
-- Keycloak serves it directly from your filesystem
-- No caching means changes are immediate
+- **CSS files** are mounted as volumes in docker-compose.yml
+- **Cache is disabled** (`KC_SPI_THEME_CACHE_THEMES: "false"`)
+- Changes appear immediately (no restart needed)
+- **`!important`** overrides parent theme styles
+- **CSS pseudo-elements** (`::before`, `::after`) inject custom content
+- **Messages properties** override default text (login page)
+- **JavaScript** changes tab title for React SPA (account page)
+- **Favicon location matters:** 
+  - Login: `login/resources/img/favicon.ico`
+  - Account: `account/resources/favicon.svg` (React app expects it at resources root)
 
-### Exercise 2: Customize the Login Page
+**Common issue:** If changes don't appear:
+- Hard refresh browser (Ctrl+Shift+R)
+- Try incognito mode
+- For favicon: Close tab completely and reopen
+- Check file exists: `docker compose exec keycloak ls /opt/keycloak/themes/blog-theme/...`
+- Verify no typos in theme.properties file references
 
-1. Open `keycloak/themes/blog-theme/login/templates/login.ftl`
-2. Find the brand title section (around line 30):
-```freemarker
-<h1 class="brand-title">${properties.brandName!realm.displayName}</h1>
+### Exercise 2: Customize the Login Page Header
+
+**Goal:** Add emoji and custom subtitle to the login page.
+
+**Important:** With parent themes, the parent's template structure is used. You have two options:
+
+#### Option A: CSS Content Injection (Simpler)
+
+Add to `keycloak/themes/blog-theme/login/resources/css/styles.css`:
+
+```css
+/* Hide default header */
+#kc-header-wrapper {
+  display: none !important;
+}
+
+#kc-page-title {
+  display: none !important;
+}
+
+/* Inject custom header */
+#kc-header::before {
+  content: "🚀 The Blog";
+  display: block;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin-bottom: 0.5rem;
+}
+
+#kc-header::after {
+  content: "Secure Authentication Made Easy";
+  display: block;
+  text-align: center;
+  color: #64748B;
+  font-size: 0.9rem;
+}
 ```
-3. Change it to:
-```freemarker
-<h1 class="brand-title">🚀 ${properties.brandName!realm.displayName}</h1>
-<p class="brand-subtitle">Secure Authentication Made Easy</p>
-```
-4. Save the file
-5. Go to http://localhost:8080/realms/blog/protocol/openid-connect/auth?client_id=blog-frontend&redirect_uri=http://localhost:5173&response_type=code
-6. Refresh
-7. You should see the rocket emoji and new subtitle!
 
-### Exercise 3: Add a Custom Property
+#### Option B: Custom Template (More Control)
+
+1. Delete `template.ftl` if it exists
+2. Keep `parent=keycloak` in theme.properties
+3. Your `login.ftl` will be used for content, but parent's wrapper is still used
+4. Use CSS overrides as shown in Option A
+
+**Test:**
+1. Go to http://localhost:5173 → "Get Started"
+2. Hard refresh (Ctrl+Shift+R)
+3. You should see the emoji, title, and subtitle
+
+**Why this approach:**
+- Parent theme provides the base HTML structure
+- Your CSS hides unwanted elements and injects custom content
+- Simpler than maintaining full custom templates
+
+### Exercise 3: Customize Tab Titles and Favicons
+
+**Goal:** Change browser tab title and favicon for both login and account pages.
+
+#### Login Page
+
+1. Create `keycloak/themes/blog-theme/login/messages/messages_en.properties`:
+```properties
+loginTitle=Sign in to The Blog
+```
+
+2. Create favicon at `keycloak/themes/blog-theme/login/resources/img/favicon.ico`
+   - Use your logo SVG or create a 32x32 icon
+   - Keycloak automatically serves it
+
+3. Test: Go to login page, check tab shows "Sign in to The Blog" with custom icon
+
+#### Account Page
+
+1. Create `keycloak/themes/blog-theme/account/resources/js/title.js`:
+```javascript
+document.title = "The Blog - Account Management";
+```
+
+2. Update `account/theme.properties`:
+```properties
+parent=keycloak.v3
+styles=css/styles.css
+scripts=js/title.js
+```
+
+3. Copy favicon to `account/resources/favicon.svg`:
+```bash
+cp keycloak/themes/blog-theme/login/resources/img/logo.svg keycloak/themes/blog-theme/account/resources/favicon.svg
+```
+
+4. Test: Go to http://localhost:8080/realms/blog/account/, close tab and reopen to see new favicon
+
+**Why different approaches:**
+- Login: Uses FreeMarker templates, supports message properties
+- Account: React SPA, needs JavaScript to change title dynamically
+- Favicon paths differ: login uses `img/favicon.ico`, account needs `resources/favicon.svg`
+
+### Exercise 4: Add a Custom Property
 
 1. Open `keycloak/themes/blog-theme/login/theme.properties`
 2. Add a new property:
@@ -935,7 +1181,7 @@ supportEmail=support@example.com
 6. Refresh the login page
 7. You should see your custom footer!
 
-### Exercise 4: Customize the Registration Page
+### Exercise 5: Customize the Registration Page
 
 1. Open `keycloak/themes/blog-theme/login/templates/register.ftl`
 2. Find the title section:
@@ -2496,6 +2742,72 @@ docker compose exec keycloak ls /opt/keycloak/themes/blog-theme/login/
 
 # Restart Keycloak
 docker compose restart keycloak
+```
+
+**Problem: Theme changes don't appear**
+```bash
+# 1. Hard refresh browser (Ctrl+Shift+R or Cmd+Shift+R)
+# 2. Try incognito/private window
+# 3. Check if file is actually updated in container:
+docker compose exec keycloak cat /opt/keycloak/themes/blog-theme/login/resources/css/styles.css | head -10
+
+# 4. Verify cache is disabled in docker-compose.yml:
+# KC_SPI_THEME_CACHE_THEMES: "false"
+# KC_SPI_THEME_CACHE_TEMPLATES: "false"
+```
+
+**Problem: Custom template not used (still seeing default Keycloak design)**
+
+**Cause:** Missing file referenced in `theme.properties` causes silent fallback to parent.
+
+**Solution:**
+```bash
+# Check what files are referenced
+cat keycloak/themes/blog-theme/login/theme.properties
+
+# Example: styles=css/login.css css/styles.css
+# If css/login.css doesn't exist, theme fails to load!
+
+# Verify all files exist
+docker compose exec keycloak ls /opt/keycloak/themes/blog-theme/login/resources/css/
+
+# Fix: Remove non-existent files from theme.properties
+# styles=css/styles.css  (only reference files that exist)
+```
+
+**Problem: Custom login.ftl content doesn't show**
+
+**Cause:** When using `parent=keycloak`, the parent's `template.ftl` wrapper is used, which may not call your custom sections.
+
+**Solution:** Use CSS to override instead of templates:
+```css
+/* Hide parent's elements */
+#kc-header-wrapper { display: none !important; }
+#kc-page-title { display: none !important; }
+
+/* Inject custom content */
+#kc-header::before {
+  content: "🚀 Your Custom Title";
+  display: block;
+  text-align: center;
+  font-size: 1.5rem;
+}
+```
+
+**Problem: Account console colors don't change**
+
+**Cause:** Account console is a React SPA with bundled CSS that has high specificity.
+
+**Solution:** Override PatternFly v5 CSS variables with `!important`:
+```css
+:root {
+  --pf-v5-global--primary-color--100: #EF4444 !important;
+  --pf-v5-c-button--m-primary--BackgroundColor: #EF4444 !important;
+}
+
+.pf-c-button.pf-m-primary {
+  background-color: #EF4444 !important;
+}
 ```
 
 **Problem: Backend returns 401**
