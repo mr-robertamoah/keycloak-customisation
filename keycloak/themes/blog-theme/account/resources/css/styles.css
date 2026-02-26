@@ -77,6 +77,16 @@ a {
   color: #1E293B !important;
 }
 
+/* Add subtitle below header */
+.pf-c-page__main-section:first-child::before {
+  content: "Manage your account settings";
+  display: block;
+  text-align: center;
+  color: #64748B;
+  font-size: 0.9rem;
+  padding: 0.5rem 0 1rem 0;
+}
+
 
 
 /* Change page title via JavaScript injection */
