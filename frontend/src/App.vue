@@ -9,6 +9,7 @@
 
       <div class="nav-right">
         <span v-if="user" class="user-greeting">Hi, {{ user.firstName || user.username }}</span>
+        <a v-if="user" href="http://localhost:8080/realms/blog/account/" class="btn-link">Account</a>
         <button v-if="user" @click="handleLogout" class="btn-secondary">Logout</button>
         <button v-else @click="handleLogin" class="btn-primary">Login</button>
       </div>
@@ -100,7 +101,7 @@ nav {
   font-size: 0.9rem;
 }
 
-button {
+button, .btn-link {
   padding: 0.5rem 1.25rem;
   border: none;
   border-radius: 6px;
@@ -108,6 +109,17 @@ button {
   cursor: pointer;
   transition: all 0.2s;
   font-size: 0.9rem;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-link {
+  background: #EF4444;
+  color: white;
+}
+
+.btn-link:hover {
+  background: #DC2626;
 }
 
 .btn-primary {
