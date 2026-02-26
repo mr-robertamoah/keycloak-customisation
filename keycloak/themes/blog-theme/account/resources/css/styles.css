@@ -1,0 +1,88 @@
+:root {
+  --pf-v5-global--primary-color--100: #EF4444 !important;
+  --pf-v5-global--primary-color--200: #DC2626 !important;
+  --pf-v5-global--link--Color: #EF4444 !important;
+  --pf-v5-global--link--Color--hover: #DC2626 !important;
+  --pf-v5-global--active-color--100: #EF4444 !important;
+  --pf-v5-c-button--m-primary--BackgroundColor: #EF4444 !important;
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: #DC2626 !important;
+  --pf-v5-global--BackgroundColor--100: #FEE2E2 !important;
+}
+
+body {
+  background: #FEE2E2 !important;
+}
+
+.pf-c-page {
+  background: #FEE2E2 !important;
+}
+
+.pf-c-page__header {
+  background: #FEE2E2 !important;
+}
+
+.pf-c-page__sidebar {
+  background: #FEE2E2 !important;
+}
+
+.pf-c-nav {
+  background: #FEE2E2 !important;
+}
+
+.pf-c-nav__link {
+  color: #1E293B !important;
+}
+
+.pf-c-nav__link:hover {
+  background: #FED7D7 !important;
+}
+
+.pf-c-button.pf-m-plain {
+  color: #1E293B !important;
+}
+
+.pf-c-button.pf-m-primary {
+  background-color: #EF4444 !important;
+  border-color: #EF4444 !important;
+}
+
+.pf-c-button.pf-m-primary:hover {
+  background-color: #DC2626 !important;
+  border-color: #DC2626 !important;
+}
+
+a {
+  color: #EF4444 !important;
+}
+
+.pf-c-page__header-brand-link img {
+  content: url('../img/logo.svg') !important;
+  display: inline-block !important;
+  width: 40px !important;
+  height: 40px !important;
+  margin-right: 0.5rem !important;
+  vertical-align: middle !important;
+}
+
+.pf-c-page__header-brand-link::after {
+  content: "The Blog";
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1E293B;
+  vertical-align: middle;
+}
+
+.pf-c-page__header-tools-item button,
+.pf-c-dropdown__toggle {
+  color: #1E293B !important;
+}
+
+
+
+/* Change page title via JavaScript injection */
+body::after {
+  content: "";
+  display: none;
+}
+
+/* This will be handled by adding a script tag in theme.properties */
