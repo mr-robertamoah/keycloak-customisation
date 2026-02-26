@@ -3,7 +3,7 @@
   "enabled": true,
   "displayName": "Blog Realm",
   "registrationAllowed": true,
-  "registrationEmailAsUsername": false,
+  "registrationEmailAsUsername": true,
   "rememberMe": true,
   "verifyEmail": false,
   "loginWithEmailAllowed": true,
@@ -12,10 +12,14 @@
   "editUsernameAllowed": false,
   "bruteForceProtected": true,
   "loginTheme": "blog-theme",
+  "accountTheme": "blog-theme",
   "emailTheme": "blog-theme",
   "accessTokenLifespan": 300,
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 36000,
+  "attributes": {
+    "userProfileEnabled": "false"
+  },
   "clients": [
     {
       "clientId": "blog-frontend",
