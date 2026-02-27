@@ -205,6 +205,12 @@ keycloak-customisation/
 │       │       ├── login.ftl         # Login page template
 │       │       ├── register.ftl      # Registration page
 │       │       └── ...               # Other pages
+│       ├── account/              # Account console pages
+│       │   ├── theme.properties      # Theme configuration
+│       │   ├── resources/
+│       │   │   └── css
+│       │   │   └── js
+│       │   │   └── img
 │       └── email/              # Email templates
 │           ├── html/           # HTML emails
 │           └── text/           # Plain text fallbacks
